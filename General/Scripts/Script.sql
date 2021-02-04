@@ -63,6 +63,8 @@ SELECT page, views FROM april_pageviews WHERE (lang = 'en');
 INSERT INTO TABLE a_en_pageviews PARTITION (lang = 'en.m')
 SELECT page, views FROM april_pageviews WHERE (lang = 'en.m');
 
+SELECT * FROM a_en_pageviews WHERE page = 'Hotel_California';
+
 CREATE TABLE IF NOT EXISTS total_a_pageviews
 AS SELECT DISTINCT(page), SUM(views) OVER (PARTITION BY page ORDER BY page)
 AS total_views FROM a_en_pageviews 
@@ -95,6 +97,8 @@ CREATE TABLE IF NOT EXISTS internal_links (
 INSERT INTO TABLE internal_links PARTITION(type = 'link')
 SELECT prev, curr, occ FROM april_clickstream WHERE type = 'link';
 
+SELECT * FROM internal_links WHERE prev = 'Hotel_California';
+
 CREATE TABLE IF NOT EXISTS total_internal
 AS SELECT DISTINCT(prev), SUM(occ) OVER (PARTITION BY prev ORDER BY prev)
 AS total_links FROM internal_links
@@ -114,5 +118,25 @@ SELECT c.prev, c.daily_clickstream, v.total_views, ROUND((c.daily_clickstream / 
 AS fraction FROM join_clickstream c INNER JOIN q2_views v 
 ON (c.prev = v.page);
 
+-- Largest fraction of readers from Hotel California
+
+CREATE TABLE IF NOT EXISTS hc_clickstream
+AS SELECT prev, ROUND((occ / 30), 4) 
+AS daily_cickstream FROM internal_links 
+WHERE prev = 'Hotel_California';
+
+SELECT v.page, c.curr, c.occ, v.total_views, ROUND((c.occ / v.total_views), 4)
+AS fraction FROM total_a_pageviews v INNER JOIN internal_links c
+ON (v.page = c.prev) WHERE c.prev = 'Hotel_California'
+AND c.curr != 'Hotel_California_(Eagles_album)' AND c.curr != 'Eagles_(band)';
+
+SELECT v.page, c.curr, c.occ, v.total_views, ROUND((c.occ / v.total_views), 4)
+AS fraction FROM total_a_pageviews v INNER JOIN internal_links c 
+ON (v.page = c.prev) WHERE c.prev = 'Don_Felder';
+
+SELECT v.page, c.curr, c.occ, v.total_views, ROUND((c.occ / v.total_views), 4)
+AS fraction FROM total_a_pageviews v INNER JOIN internal_links c 
+ON (v.page = c.prev) WHERE c.prev = 'On_the_Border'
+AND curr != 'One_of_These_Nights' AND curr != 'Desperado_(Eagles_album)';
 
 
