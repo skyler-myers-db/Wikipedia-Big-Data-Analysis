@@ -21,12 +21,12 @@ LOAD DATA INPATH '/user/skyler/Project1Files/' INTO TABLE pageviews;
 
 CREATE TABLE IF NOT EXISTS en_pageviews (
 	page STRING,
-	views INT
-) PARTITIONED BY (lang STRING)
-ROW FORMAT DELIMITED
-FIELDS TERMINATED BY '\t';
+	views INT) 
+	PARTITIONED BY (lang STRING)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY '\t';
 
-INSERT INTO TABLE en_pageviews PARTITION(lang = 'en')
+INSERT INTO TABLE en_pageviews PARTITION (lang = 'en')
 SELECT page, views FROM pageviews WHERE lang = 'en';
 
 CREATE TABLE IF NOT EXISTS total_en_pageviews
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS internal_links (
 	ROW FORMAT DELIMITED
 	FIELDS TERMINATED BY '\t';
 
-INSERT INTO TABLE internal_links PARTITION(type = 'link')
+INSERT INTO TABLE internal_links PARTITION (type = 'link')
 SELECT prev, curr, occ FROM april_clickstream WHERE type = 'link';
 
 SELECT * FROM internal_links WHERE prev = 'Hotel_California';
@@ -138,5 +138,69 @@ SELECT v.page, c.curr, c.occ, v.total_views, ROUND((c.occ / v.total_views), 4)
 AS fraction FROM total_a_pageviews v INNER JOIN internal_links c 
 ON (v.page = c.prev) WHERE c.prev = 'On_the_Border'
 AND curr != 'One_of_These_Nights' AND curr != 'Desperado_(Eagles_album)';
+
+-- RELATIVELY MORE POPULAR PAGE IN AMERICA THAN GERMANY
+
+CREATE EXTERNAL TABLE IF NOT EXISTS american_views (
+	lang STRING,
+	page STRING,
+	views INT)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY ' '
+	LOCATION '/user/skyler/american-views';
+
+LOAD DATA INPATH '/user/skyler/american/' INTO TABLE american_views;
+
+CREATE TABLE IF NOT EXISTS en_am_views (
+	page STRING,
+	views INT)
+	PARTITIONED BY (lang STRING)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY '\t';
+
+INSERT INTO TABLE en_am_views PARTITION (lang = 'en')
+SELECT page, views FROM american_views WHERE lang = 'en';
+
+CREATE TABLE IF NOT EXISTS total_am_views
+AS SELECT DISTINCT(page), SUM(views) OVER (PARTITION BY page ORDER BY page)
+AS total_views_am FROM en_am_views WHERE page != 'Main_Page' 
+AND page != 'Special:Search' AND page != '-';
+
+SELECT * FROM total_am_views
+ORDER BY total_views_am DESC;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS gm_views (
+	lang STRING,
+	page STRING,
+	views INT)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY ' '
+	LOCATION '/user/skyler/german-views';
+
+LOAD DATA INPATH '/user/skyler/german/' INTO TABLE gm_views;
+
+CREATE TABLE IF NOT EXISTS gm_de_views (
+	page STRING,
+	views INT)
+	PARTITIONED BY (lang STRING)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY '\t';
+
+INSERT INTO TABLE gm_de_views PARTITION (lang = 'de')
+SELECT page, views FROM gm_views WHERE lang = 'de';
+
+CREATE TABLE IF NOT EXISTS total_gm_views
+AS SELECT DISTINCT(page), SUM(views) OVER (PARTITION BY page ORDER BY page)
+AS total_views_gm FROM gm_de_views WHERE page != 'Main_Page'
+AND page != 'Special:Search' AND page != '-';
+
+SELECT * FROM total_gm_views
+ORDER BY total_views_gm DESC;
+
+CREATE TABLE IF NOT EXISTS am_gm_views
+AS SELECT a.page, a.total_views_am, g.total_views_gm FROM total_am_views a
+INNER JOIN total_gm_views g ON (a.page = g.page);
+
+SELECT * FROM am_gm_views;
 
 
