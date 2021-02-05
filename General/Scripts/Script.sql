@@ -6,6 +6,8 @@ SET hive.exec.dynamic.partition = true;
 SET hive.exec.dynamic.partition.mode = nonstrict;
 SET hive.exec.max.dynamic.partitions = 500000;
 SET hive.exec.max.dynamic.partitions.pernode = 500000;
+SET hive.strict.checks.cartesian.product = false;
+SET hive.mapred.mode = nonstrict;
 
 -- MOST VIEWS
 
@@ -202,5 +204,119 @@ AS SELECT a.page, a.total_views_am, g.total_views_gm FROM total_am_views a
 INNER JOIN total_gm_views g ON (a.page = g.page);
 
 SELECT * FROM am_gm_views;
+
+-- AVERAGE VIEWS OF VANDALIZED PAGES
+
+CREATE EXTERNAL TABLE IF NOT EXISTS  nov_views (
+	lang STRING,
+	page STRING,
+	views INT)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY ' '
+	LOCATION '/user/skyler/nov-data/';
+	
+LOAD DATA INPATH '/user/skyler/nov-views/' INTO TABLE nov_views;
+
+CREATE TABLE IF NOT EXISTS total_nov_views
+AS SELECT DISTINCT(page), SUM(views) OVER (PARTITION BY page ORDER BY page)
+AS total_views FROM nov_views;
+
+CREATE TABLE IF NOT EXISTS avg_view_min
+AS SELECT (AVG(total_views) / 1440) AS minute_views FROM total_nov_views
+WHERE total_views > 50;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS vandalism (
+	wiki_db STRING,
+	event_entity STRING,
+	event_type STRING,
+	event_timestamp STRING,
+	event_comment STRING,
+	event_user_id INT,
+	event_user_text_historical STRING,
+	event_user_text STRING,
+	event_user_blocks_historical STRING,
+	event_user_blocks STRING,
+	event_user_groups_historical STRING,
+	event_user_groups STRING,
+	event_user_is_bot_by_historical STRING,
+	event_user_is_bot_by STRING,
+	event_user_is_created_by_self BOOLEAN,
+	event_user_is_created_by_system BOOLEAN,
+	event_user_is_created_by_peer BOOLEAN,
+	event_user_is_anonymous BOOLEAN, 
+	event_user_registration_timestamp STRING,
+	event_user_creation_timestamp STRING,
+	event_user_first_edit_timestamp STRING,
+	event_user_revision_count INT,
+	event_user_seconds_since_previous_revision INT,
+	page_id INT,
+	page_title_historical  STRING,
+	page_title  STRING,
+	page_namespace_historical INT,
+	page_namespace_is_content_historical BOOLEAN,
+	page_namespace INT,
+	page_namespace_is_content BOOLEAN,
+	page_is_redirect BOOLEAN,
+	page_is_deleted BOOLEAN,
+	page_creation_timestamp STRING,
+	page_first_edit_timestamp STRING,
+	page_revision_count INT,
+	page_seconds_since_previous_revision INT,
+	user_id INT,
+	user_text_historical STRING,	
+	user_text	STRING,
+	user_blocks_historical STRING,
+	user_blocks	STRING,	
+	user_groups_historical	STRING,	
+	user_groups	STRING,
+	user_is_bot_by_historical STRING,	
+	user_is_bot_by	STRING,	
+	user_is_created_by_self BOOLEAN,	
+	user_is_created_by_system BOOLEAN,
+	user_is_created_by_peer BOOLEAN,
+	user_is_anonymous BOOLEAN,
+	user_registration_timestamp	STRING,
+	user_creation_timestamp	STRING,
+	user_first_edit_timestamp	STRING,
+	revision_id INT,
+	revision_parent_id INT, 
+	revision_minor_edit BOOLEAN, 
+	revision_deleted_parts	STRING,
+	revision_deleted_parts_are_suppressed BOOLEAN,
+	revision_text_bytes INT, 
+	revision_text_bytes_diff INT, 
+	revision_text_sha1	STRING,
+	revision_content_model	STRING, 
+	revision_content_format	STRING, 
+	revision_is_deleted_by_page_deletion BOOLEAN,	
+	revision_deleted_by_page_deletion_timestamp	STRING, 
+	revision_is_identity_reverted BOOLEAN,
+	revision_first_identity_reverting_revision_id INT,
+	revision_seconds_to_identity_revert INT,
+	revision_is_identity_revert BOOLEAN,
+	revision_is_from_before_page_creation BOOLEAN,
+	revision_tags	STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+LOCATION '/user/skyler/vandalism';
+
+LOAD DATA INPATH '/user/skyler/vandal-data/' INTO TABLE vandalism;
+
+CREATE TABLE IF NOT EXISTS revision_seconds
+AS SELECT revision_seconds_to_identity_revert FROM vandalism 
+WHERE user_id IS NULL AND revision_is_identity_reverted = true
+AND revision_seconds_to_identity_revert > 0 AND revision_seconds_to_identity_revert < 3000;
+
+CREATE TABLE IF NOT EXISTS avg_min_revision
+AS SELECT (AVG(revision_seconds_to_identity_revert) / 60) AS average_revision_minutes
+FROM revision_seconds;
+
+CREATE TABLE vand_views
+AS SELECT * FROM avg_min_revision, avg_view_min;
+
+SELECT average_revision_minutes, minute_views, ROUND((average_revision_minutes / minute_views), 2)
+AS avg_vand_views FROM vand_views;
+
 
 
