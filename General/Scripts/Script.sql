@@ -312,11 +312,117 @@ CREATE TABLE IF NOT EXISTS avg_min_revision
 AS SELECT (AVG(revision_seconds_to_identity_revert) / 60) AS average_revision_minutes
 FROM revision_seconds;
 
-CREATE TABLE vand_views
+CREATE TABLE IF NOT EXISTS vand_views
 AS SELECT * FROM avg_min_revision, avg_view_min;
 
 SELECT average_revision_minutes, minute_views, ROUND((average_revision_minutes / minute_views), 2)
 AS avg_vand_views FROM vand_views;
 
+-- BITCOIN GROWTH ANALYSIS
 
+CREATE EXTERNAL TABLE IF NOT EXISTS bitcoin_2015 (
+	lang STRING,
+	page STRING,
+	views INT)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY ' '
+	LOCATION '/user/skyler/b2015/';
+
+LOAD DATA INPATH '/user/skyler/2015/' INTO TABLE bitcoin_2015;
+
+CREATE TABLE IF NOT EXISTS total_2015
+AS SELECT DISTINCT(page), SUM(views) OVER (PARTITION BY page ORDER BY page)
+AS v_2015 FROM bitcoin_2015 WHERE page = 'Bitcoin';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS bitcoin_2016 (
+	lang STRING,
+	page STRING,
+	views INT)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY ' '
+	LOCATION '/user/skyler/b2016/';
+
+LOAD DATA INPATH '/user/skyler/2016/' INTO TABLE bitcoin_2016;
+
+CREATE TABLE IF NOT EXISTS total_2016
+AS SELECT DISTINCT(page), SUM(views) OVER (PARTITION BY page ORDER BY page)
+AS v_2016 FROM bitcoin_2016 WHERE page = 'Bitcoin';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS bitcoin_2017 (
+	lang STRING,
+	page STRING,
+	views INT)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY ' '
+	LOCATION '/user/skyler/b2017/';
+
+LOAD DATA INPATH '/user/skyler/2017/' INTO TABLE bitcoin_2017;
+
+CREATE TABLE IF NOT EXISTS total_2017
+AS SELECT DISTINCT(page), SUM(views) OVER (PARTITION BY page ORDER BY page)
+AS v_2017 FROM bitcoin_2017 WHERE page = 'Bitcoin';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS bitcoin_2018 (
+	lang STRING,
+	page STRING,
+	views INT)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY ' '
+	LOCATION '/user/skyler/b2018/';
+
+LOAD DATA INPATH '/user/skyler/2018/' INTO TABLE bitcoin_2018;
+
+CREATE TABLE IF NOT EXISTS total_2018
+AS SELECT DISTINCT(page), SUM(views) OVER (PARTITION BY page ORDER BY page)
+AS v_2018 FROM bitcoin_2018 WHERE page = 'Bitcoin';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS bitcoin_2019 (
+	lang STRING,
+	page STRING,
+	views INT)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY ' '
+	LOCATION '/user/skyler/b2019/';
+
+LOAD DATA INPATH '/user/skyler/2019/' INTO TABLE bitcoin_2019;
+
+CREATE TABLE IF NOT EXISTS total_2019
+AS SELECT DISTINCT(page), SUM(views) OVER (PARTITION BY page ORDER BY page)
+AS v_2019 FROM bitcoin_2019 WHERE page = 'Bitcoin';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS bitcoin_2020 (
+	lang STRING,
+	page STRING,
+	views INT)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY ' '
+	LOCATION '/user/skyler/b2020/';
+
+LOAD DATA INPATH '/user/skyler/2020/' INTO TABLE bitcoin_2020;
+
+CREATE TABLE IF NOT EXISTS total_2020
+AS SELECT DISTINCT(page), SUM(views) OVER (PARTITION BY page ORDER BY page)
+AS v_2020 FROM bitcoin_2020 WHERE page = 'Bitcoin';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS bitcoin_2021 (
+	lang STRING,
+	page STRING,
+	views INT)
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY ' '
+	LOCATION '/user/skyler/b2021/';
+
+LOAD DATA INPATH '/user/skyler/2021/' INTO TABLE bitcoin_2021;
+
+CREATE TABLE IF NOT EXISTS total_2021
+AS SELECT DISTINCT(page), SUM(views) OVER (PARTITION BY page ORDER BY page)
+AS v_2021 FROM bitcoin_2021 WHERE page = 'Bitcoin';
+
+SELECT a.v_2015, b.v_2016, c.v_2017, d.v_2018, e.v_2019, f.v_2020, g.v_2021
+FROM total_2015 a INNER JOIN total_2016 b ON (b.page = a.page)
+INNER JOIN total_2017 c ON (c.page = b.page)
+INNER JOIN total_2018 d ON (d.page = c.page)
+INNER JOIN total_2019 e ON (e.page = c.page)
+INNER JOIN total_2020 f ON (f.page = e.page)
+INNER JOIN total_2021 g ON (g.page = f.page);
 
