@@ -1,6 +1,6 @@
 # Wikipedia Big Data Analysis
 
-This [analysis](https://www.tableau.com/learn/articles/big-data-analytics) consists of using big data tools to answer questions about datasets from [Wikipedia](https://www.wikipedia.org/). There are a series of analysis questions, answered using [Hive](https://en.wikipedia.org/wiki/Apache_Hive) and MapReduce. The tools used are determined based on the context for each question. The output of the analysis includes MapReduce jarfiles and [.hql](https://hive.apache.org/) files so that the analysis is a repeatable process that works on a larger dataset, not just an ad hoc calculation.
+This [analysis](https://www.tableau.com/learn/articles/big-data-analytics) consists of using big data tools to answer questions about datasets from [Wikipedia](https://www.wikipedia.org/). There are a series of analysis questions, answered using [Hive](https://en.wikipedia.org/wiki/Apache_Hive) and MapReduce. The tools used are determined based on the context for each question. The output of the analysis includes [MapReduce](https://hadoop.apache.org/docs/r1.2.1/mapred_tutorial.html) [.jar files](https://en.wikipedia.org/wiki/JAR_(file_format)) and [.hql](https://hive.apache.org/) files so that the analysis is a repeatable process that works on a larger [dataset](https://en.wikipedia.org/wiki/Data_set), not just an [ad hoc](https://en.wikipedia.org/wiki/Ad_hoc) calculation.
 
 ## Technologies Used
 
