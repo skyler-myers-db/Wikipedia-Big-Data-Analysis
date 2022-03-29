@@ -26,7 +26,7 @@ Most of the code was done using HQL in a [Hive](https://hive.apache.org/) GUI in
 
 1. [Download DBeaver Community Edition](https://dbeaver.io/download/)
 2. [Install Hive on your machine or virtual machine](https://phoenixnap.com/kb/install-hive-on-ubuntu)
-3. [Clone](https://www.git-scm.com/docs/git-clone) my code - git clone https://github.com/samye760/Wikipedia-Big-Data-Analysis.git
+3. [Clone](https://www.git-scm.com/docs/git-clone) my code - `git clone https://github.com/samye760/Wikipedia-Big-Data-Analysis.git`
 4. Setup a [Hive](https://hive.apache.org/) connection in DBeaver, import my script, and start querying the data.
 
 ### Usage
